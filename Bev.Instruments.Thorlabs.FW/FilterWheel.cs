@@ -31,6 +31,11 @@ namespace Bev.Instruments.Thorlabs.FW
         public string InstrumentFirmewareVersion { get; private set; }
         public int FilterCount => filterCount;
 
+        public void SetFilter(int position)
+        {
+            Query($"pos={position}");
+        }
+
         public string Query(string command)
         {
             Write(command);
