@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO.Ports;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
 
 namespace Bev.Instruments.Thorlabs.FW
 {
@@ -69,7 +69,14 @@ namespace Bev.Instruments.Thorlabs.FW
 
         private void CheckErrorStatus(string answer, string command)
         {
-            throw new NotImplementedException();
+            if (answer.Contains("CMD_NOT_DEFINED"))
+            {
+                throw new InvalidOperationException(command);
+            }
+            if (answer.Contains("CMD_ARG_INVALID"))
+            {
+                throw new ArgumentOutOfRangeException(command, answer);
+            }
         }
 
         private void Write(string command) => serialPort.WriteLine(command);
@@ -79,9 +86,6 @@ namespace Bev.Instruments.Thorlabs.FW
         private string SkipNewLine(string line) => line.TrimEnd('\r', '\n');
 
         private string SkipPrompt(string line) => line.TrimStart('>', ' ');
-
-
-
 
     }
 }
