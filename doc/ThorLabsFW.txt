@@ -1,0 +1,33 @@
+> *idn?S FW102C/FW212C Filter Wheel version 1.07
+THORLABS FW102C/FW212C Filter Wheel version 1.07
+> pos=3
+> pos?
+3
+> pcount?
+6
+> trig?
+0
+> speed=0
+> speed?
+0
+> pos=6
+> speed=1
+> pos=3
+> sensors?
+0
+> POS=2
+Command error CMD_NOT_DEFINED
+
+> pos=1
+> pos=2
+> pos=3
+> pos=0
+Command error CMD_ARG_INVALID
+
+> pos=7
+Command error CMD_ARG_INVALID
+
+> pos=6
+> pos=1
+> pos=5
+>

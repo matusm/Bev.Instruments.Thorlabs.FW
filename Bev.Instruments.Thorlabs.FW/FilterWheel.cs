@@ -50,11 +50,11 @@ namespace Bev.Instruments.Thorlabs.FW
         {
             Write(command);
             Thread.Sleep(delay);
+            _ = Read();
             string answer = Read();
-            answer = Read();
+            Thread.Sleep(delay);
             answer = SkipNewLine(answer);
             CheckErrorStatus(answer, command);
-            //Console.WriteLine($">>> {command} {answer}");
             return SkipPrompt(answer);
         }
 
@@ -90,7 +90,7 @@ namespace Bev.Instruments.Thorlabs.FW
 
         private void CheckErrorStatus(string answer, string command)
         {
-            Console.WriteLine($">>>> {command} {answer}");
+            Console.WriteLine($">>> {command} -> {answer}");
             return;
             if (answer.Contains("CMD_NOT_DEFINED"))
             {
@@ -104,7 +104,19 @@ namespace Bev.Instruments.Thorlabs.FW
 
         private void Write(string command) => serialPort.WriteLine(command);
 
-        private string Read() => serialPort.ReadLine();
+        private string Read()
+        {
+            string answer = string.Empty;
+            try
+            {
+                answer = serialPort.ReadLine();
+            }
+            catch (TimeoutException)
+            {
+                // return the empty string
+            }
+            return answer;
+        }
 
         private string SkipNewLine(string line) => line.TrimEnd('\r', '\n');
 
