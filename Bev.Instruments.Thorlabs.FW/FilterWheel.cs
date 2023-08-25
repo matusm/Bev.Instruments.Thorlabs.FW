@@ -8,7 +8,8 @@ namespace Bev.Instruments.Thorlabs.FW
     {
         private readonly SerialPort serialPort;
         private int filterCount;
-        private const int typicalAccessTime = 2500; // in ms, specifications, manual p 12
+        private const int typicalAccessTime = 2500; // in ms, specifications manual p 12
+        private const int delay = 100;
 
         public FilterWheel(string port)
         {
@@ -16,7 +17,9 @@ namespace Bev.Instruments.Thorlabs.FW
             serialPort = new SerialPort(DevicePort, 115200, Parity.None, 8, StopBits.One)
             {
                 Handshake = Handshake.None,
-                NewLine = "\r"
+                NewLine = "\r",
+                ReadTimeout = typicalAccessTime,
+                WriteTimeout = typicalAccessTime
             };
             serialPort.Open();
             Initialize();
@@ -25,8 +28,8 @@ namespace Bev.Instruments.Thorlabs.FW
         public string DevicePort { get; }
         public string InstrumentManufacturer { get; private set; }
         public string InstrumentType { get; private set; }
-        public string InstrumentSerialNumber => "---"; // no documented way to obtain the serial number
         public string InstrumentFirmewareVersion { get; private set; }
+        public string InstrumentID => $"{InstrumentManufacturer} {InstrumentType} {InstrumentFirmewareVersion}";
         public int FilterCount => filterCount;
 
         public void SetPosition(int position)
@@ -46,9 +49,12 @@ namespace Bev.Instruments.Thorlabs.FW
         public string Query(string command)
         {
             Write(command);
+            Thread.Sleep(delay);
             string answer = Read();
+            answer = Read();
             answer = SkipNewLine(answer);
             CheckErrorStatus(answer, command);
+            //Console.WriteLine($">>> {command} {answer}");
             return SkipPrompt(answer);
         }
 
@@ -60,6 +66,9 @@ namespace Bev.Instruments.Thorlabs.FW
 
         private void Initialize()
         {
+            //serialPort.DiscardInBuffer();
+            Write(" ");
+            Console.WriteLine(Read());
             UpdateInstrumentId();
             filterCount = GetFilterCount();
         }
@@ -81,6 +90,8 @@ namespace Bev.Instruments.Thorlabs.FW
 
         private void CheckErrorStatus(string answer, string command)
         {
+            Console.WriteLine($">>>> {command} {answer}");
+            return;
             if (answer.Contains("CMD_NOT_DEFINED"))
             {
                 throw new InvalidOperationException(command);
