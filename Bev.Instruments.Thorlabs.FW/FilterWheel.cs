@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO.Ports;
-using System.Linq;
-using System.Text;
 using System.Threading;
 
 namespace Bev.Instruments.Thorlabs.FW
@@ -11,6 +8,7 @@ namespace Bev.Instruments.Thorlabs.FW
     {
         private readonly SerialPort serialPort;
         private int filterCount;
+        private const int typicalAccessTime = 2500; // in ms, specifications, manual p 12
 
         public FilterWheel(string port)
         {
@@ -31,10 +29,19 @@ namespace Bev.Instruments.Thorlabs.FW
         public string InstrumentFirmewareVersion { get; private set; }
         public int FilterCount => filterCount;
 
-        public void SetFilter(int position)
+        public void SetPosition(int position)
         {
+            // TODO check valid position number
             Query($"pos={position}");
         }
+
+        public void SetPositionWait(int position)
+        {
+            SetPosition(position);
+            Thread.Sleep(typicalAccessTime);
+        }
+
+        public int GetPosition() => QueryNumber("pos?");
 
         public string Query(string command)
         {
