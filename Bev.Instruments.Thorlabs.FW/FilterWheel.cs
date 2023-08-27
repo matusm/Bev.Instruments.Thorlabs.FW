@@ -10,6 +10,7 @@ namespace Bev.Instruments.Thorlabs.FW
         private int filterCount;
         private const int typicalAccessTime = 2500; // in ms, specifications manual p 12
         private const int delay = 100;
+        private const int maxLoops = 100000;
 
         public FilterWheel(string port)
         {
@@ -32,15 +33,15 @@ namespace Bev.Instruments.Thorlabs.FW
         public string InstrumentID => $"{InstrumentManufacturer} {InstrumentType} {InstrumentFirmewareVersion}";
         public int FilterCount => filterCount;
 
-        public void SetPosition(int position)
+        public void GoToPosition(int position)
         {
             // TODO check valid position number
             Query($"pos={position}");
         }
 
-        public void SetPositionWait(int position)
+        public void GoToPositionWait(int position)
         {
-            SetPosition(position);
+            GoToPosition(position);
             Thread.Sleep(typicalAccessTime);
         }
 
@@ -54,21 +55,26 @@ namespace Bev.Instruments.Thorlabs.FW
             string answer = Read();
             Thread.Sleep(delay);
             answer = SkipNewLine(answer);
+            _Log(command, answer);
             CheckErrorStatus(answer, command);
-            return SkipPrompt(answer);
+            return answer;
         }
 
         public int QueryNumber(string command)
         {
             string answer = Query(command);
-            return int.TryParse(answer, out int value) ? value : -1;
+            int n = int.TryParse(answer, out int value) ? value : -1;
+            _Log(n);
+            return n;
         }
 
         private void Initialize()
         {
             //serialPort.DiscardInBuffer();
-            Write(" ");
-            Console.WriteLine(Read());
+            Write("");
+            string answ = Read();
+            if (!IsPrompt(answ))
+                Write("");
             UpdateInstrumentId();
             filterCount = GetFilterCount();
         }
@@ -90,8 +96,7 @@ namespace Bev.Instruments.Thorlabs.FW
 
         private void CheckErrorStatus(string answer, string command)
         {
-            Console.WriteLine($">>> {command} -> {answer}");
-            return;
+            _Log("CheckErrorStatus", answer);
             if (answer.Contains("CMD_NOT_DEFINED"))
             {
                 throw new InvalidOperationException(command);
@@ -109,18 +114,50 @@ namespace Bev.Instruments.Thorlabs.FW
             string answer = string.Empty;
             try
             {
-                answer = serialPort.ReadLine();
+                //int charCount = serialPort.BytesToRead;
+                //char[] chars = new char[charCount];
+                //serialPort.Read(chars, 0, charCount);
+                //answer = new string(chars);
+                answer = serialPort.ReadExisting();
             }
-            catch (TimeoutException)
+            catch (TimeoutException) // cannot happen with ReadExisting()
             {
                 // return the empty string
             }
             return answer;
         }
 
+        private bool IsPrompt(string line)
+        {
+            _Log("IsPrompt", line);
+            if(line.Contains(">"))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        private void WaitForPrompt()
+        {
+            for (int i = 0; i < maxLoops; i++)
+            {
+                string answer = Read();
+                if (IsPrompt(answer)) 
+                    return;
+                Thread.Sleep(delay);
+            }
+        }
+
+
         private string SkipNewLine(string line) => line.TrimEnd('\r', '\n');
 
-        private string SkipPrompt(string line) => line.TrimStart('>', ' ');
+
+        private void _Log(string message) => Console.WriteLine($"*****DEBUG***** '{message}'");
+        private void _Log(int n) => _Log($"n = {n}");
+        private void _Log(string key, string value) => _Log($"{key}:{value}");
 
     }
 }
