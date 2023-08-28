@@ -7,7 +7,8 @@ namespace TestFW
     {
         static void Main(string[] args)
         {
-            var fw = new FilterWheel(@"/dev/tty.usbserial-FTY594BQ");
+            //var fw = new FilterWheel(@"/dev/tty.usbserial-FTY594BQ");
+            var fw = new FilterWheel(@"COM3");
 
             Console.WriteLine("Port:      " + fw.DevicePort);
             Console.WriteLine("ID:        " + fw.InstrumentID);
