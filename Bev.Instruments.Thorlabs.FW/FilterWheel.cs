@@ -4,45 +4,40 @@ using System.Threading;
 
 namespace Bev.Instruments.Thorlabs.FW
 {
-    public class FilterWheel
+    public class FilterWheel : IFilterWheel
     {
         private readonly SerialPort serialPort;
-        private int filterCount;
-        private const int typicalAccessTime = 2500; // in ms, specifications manual p 12
-        private const int delay = 100;
-        private const int maxLoops = 100000;
+        private const int transmitDelay = 100;
+
+        // The time it takes to move from #1 to #4 (#1 to #7 for 12 filter wheel)
+        // the manual specifies 2500 ms, we measured 2900 ms.
+        // in slow mode the respective time is 6800 ms.
+        private const int typicalAccessTime = 2900;
 
         public FilterWheel(string port)
         {
-            DevicePort = port.Trim();
-            serialPort = new SerialPort(DevicePort, 115200, Parity.None, 8, StopBits.One)
+            serialPort = new SerialPort(port, 115200, Parity.None, 8, StopBits.One)
             {
                 Handshake = Handshake.None,
                 NewLine = "\r",
                 ReadTimeout = typicalAccessTime,
-                WriteTimeout = typicalAccessTime
+                WriteTimeout = 500
             };
             serialPort.Open();
-            Initialize();
+            UpdateInstrumentId();
         }
 
-        public string DevicePort { get; }
+        public string DevicePort => serialPort.PortName;
         public string InstrumentManufacturer { get; private set; }
         public string InstrumentType { get; private set; }
         public string InstrumentFirmewareVersion { get; private set; }
         public string InstrumentID => $"{InstrumentManufacturer} {InstrumentType} {InstrumentFirmewareVersion}";
-        public int FilterCount => filterCount;
+        public int FilterCount => GetFilterCount();
 
         public void GoToPosition(int position)
         {
-            // TODO check valid position number
-            Query($"pos={position}");
-        }
-
-        public void GoToPositionWait(int position)
-        {
-            GoToPosition(position);
-            Thread.Sleep(typicalAccessTime);
+            // if (IsInvalidPosition(position)) return; // TODO or just throw an exception?
+            _ = Query($"pos={position}");
         }
 
         public int GetPosition() => QueryNumber("pos?");
@@ -50,12 +45,9 @@ namespace Bev.Instruments.Thorlabs.FW
         public string Query(string command)
         {
             Write(command);
-            Thread.Sleep(delay);
-            _ = Read();
+            _ = Read(); // this consumes the echo!
             string answer = Read();
-            Thread.Sleep(delay);
-            answer = SkipNewLine(answer);
-            _Log(command, answer);
+            answer = RemoveNewLine(answer);
             CheckErrorStatus(answer, command);
             return answer;
         }
@@ -63,20 +55,7 @@ namespace Bev.Instruments.Thorlabs.FW
         public int QueryNumber(string command)
         {
             string answer = Query(command);
-            int n = int.TryParse(answer, out int value) ? value : -1;
-            _Log(n);
-            return n;
-        }
-
-        private void Initialize()
-        {
-            //serialPort.DiscardInBuffer();
-            Write("");
-            string answ = Read();
-            if (!IsPrompt(answ))
-                Write("");
-            UpdateInstrumentId();
-            filterCount = GetFilterCount();
+            return int.TryParse(answer, out int value) ? value : -1;
         }
 
         private int GetFilterCount() => QueryNumber("pcount?");
@@ -84,19 +63,30 @@ namespace Bev.Instruments.Thorlabs.FW
         private void UpdateInstrumentId()
         {
             string idLine = Query("*idn?");
-            char[] del = { ' ' };
-            string[] tokens = idLine.Split(del, StringSplitOptions.RemoveEmptyEntries);
+            char[] delimiter = { ' ' };
+            string[] tokens = idLine.Split(delimiter, StringSplitOptions.RemoveEmptyEntries);
             if (tokens.Length == 6)
             {
                 InstrumentManufacturer = tokens[0];
                 InstrumentType = tokens[1];
                 InstrumentFirmewareVersion = tokens[5];
             }
+            else
+            {
+                Console.WriteLine($"wrong format for idn: {tokens.Length} tokens!");
+            }
+        }
+
+        private bool IsInvalidPosition(int pos)
+        {
+            if (FilterCount < 0) return false; // cannot check if filter count is invalid
+            if (pos < 1) return true;
+            if (pos > FilterCount) return true;
+            return false;
         }
 
         private void CheckErrorStatus(string answer, string command)
         {
-            _Log("CheckErrorStatus", answer);
             if (answer.Contains("CMD_NOT_DEFINED"))
             {
                 throw new InvalidOperationException(command);
@@ -107,57 +97,29 @@ namespace Bev.Instruments.Thorlabs.FW
             }
         }
 
-        private void Write(string command) => serialPort.WriteLine(command);
+        private void Write(string command)
+        {
+            serialPort.DiscardInBuffer();
+            serialPort.DiscardOutBuffer();
+            serialPort.WriteLine(command);
+            Thread.Sleep(transmitDelay);
+        }
 
         private string Read()
         {
             string answer = string.Empty;
             try
             {
-                //int charCount = serialPort.BytesToRead;
-                //char[] chars = new char[charCount];
-                //serialPort.Read(chars, 0, charCount);
-                //answer = new string(chars);
-                answer = serialPort.ReadExisting();
+                answer = serialPort.ReadLine();
             }
-            catch (TimeoutException) // cannot happen with ReadExisting()
+            catch (TimeoutException)
             {
                 // return the empty string
             }
-            return answer;
+            return RemoveNewLine(answer);
         }
 
-        private bool IsPrompt(string line)
-        {
-            _Log("IsPrompt", line);
-            if(line.Contains(">"))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        private void WaitForPrompt()
-        {
-            for (int i = 0; i < maxLoops; i++)
-            {
-                string answer = Read();
-                if (IsPrompt(answer)) 
-                    return;
-                Thread.Sleep(delay);
-            }
-        }
-
-
-        private string SkipNewLine(string line) => line.TrimEnd('\r', '\n');
-
-
-        private void _Log(string message) => Console.WriteLine($"*****DEBUG***** '{message}'");
-        private void _Log(int n) => _Log($"n = {n}");
-        private void _Log(string key, string value) => _Log($"{key}:{value}");
+        private string RemoveNewLine(string line) => line.Replace("\r", string.Empty).Replace("\n", string.Empty);
 
     }
 }

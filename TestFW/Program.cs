@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Bev.Instruments.Thorlabs.FW;
 
 namespace TestFW
@@ -11,18 +7,49 @@ namespace TestFW
     {
         static void Main(string[] args)
         {
-            var fw = new FilterWheel("COM4");
+            var fw = new FilterWheel("COM1");
 
-            fw.GoToPositionWait(1);
-            Console.WriteLine(fw.GetPosition());
+            Console.WriteLine("Port:      " + fw.DevicePort);
+            Console.WriteLine("ID:        " + fw.InstrumentID);
             Console.WriteLine("# filters: " + fw.FilterCount);
-            Console.WriteLine("ID: " + fw.InstrumentID);
-            fw.GoToPositionWait(4);
-            fw.GoToPositionWait(7);
-            fw.GoToPositionWait(5);
+            Console.WriteLine("Position:  " + fw.GetPosition());
 
+            Move(1);
 
+            // five filter procedure
+
+            for (int i = 0; i < 4; i++)
+            {
+                Move(1);
+                Move(2);
+                Move(3);
+                Move(4);
+                Move(5);
+                Move(6);
+                Move(1);
+                Move(6);
+                Move(5);
+                Move(4);
+                Move(3);
+                Move(2);
+                Move(1);
+            }
+
+            void Move(int pos)
+            {
+                Console.WriteLine($"Goto filter {pos} ...");
+                fw.GoToPosition(pos);
+                Console.Write("done. ");
+                DisplayPosition();
+                Console.WriteLine();
+            }
+
+            void DisplayPosition()
+            {
+                Console.WriteLine($"Position: {fw.GetPosition()}");
+            }
 
         }
+
     }
 }
