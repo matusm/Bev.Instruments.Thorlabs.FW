@@ -7,14 +7,12 @@ namespace TestFW
     {
         static void Main(string[] args)
         {
-            var fw = new FilterWheel("COM1");
+            var fw = new FilterWheel(@"/dev/tty.usbserial-FTY594BQ");
 
             Console.WriteLine("Port:      " + fw.DevicePort);
             Console.WriteLine("ID:        " + fw.InstrumentID);
             Console.WriteLine("# filters: " + fw.FilterCount);
             Console.WriteLine("Position:  " + fw.GetPosition());
-
-            Move(1);
 
             // five filter procedure
 
