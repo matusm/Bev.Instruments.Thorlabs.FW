@@ -30,8 +30,8 @@ namespace Bev.Instruments.Thorlabs.FW
         public string DevicePort => serialPort.PortName;
         public string InstrumentManufacturer { get; private set; }
         public string InstrumentType { get; private set; }
-        public string InstrumentFirmewareVersion { get; private set; }
-        public string InstrumentID => $"{InstrumentManufacturer} {InstrumentType} {InstrumentFirmewareVersion}";
+        public string InstrumentFirmwareVersion { get; private set; }
+        public string InstrumentID => $"{InstrumentManufacturer} {InstrumentType} {InstrumentFirmwareVersion}";
         public int FilterCount => GetFilterCount();
 
         public void GoToPosition(int position)
