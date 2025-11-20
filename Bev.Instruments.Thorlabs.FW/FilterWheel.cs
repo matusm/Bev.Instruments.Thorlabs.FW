@@ -38,6 +38,7 @@ namespace Bev.Instruments.Thorlabs.FW
         {
             // if (IsInvalidPosition(position)) return; // TODO or just throw an exception?
             _ = Query($"pos={position}");
+            Thread.Sleep(typicalAccessTime);
         }
 
         public int GetPosition() => QueryNumber("pos?");
@@ -69,7 +70,7 @@ namespace Bev.Instruments.Thorlabs.FW
             {
                 InstrumentManufacturer = tokens[0];
                 InstrumentType = tokens[1];
-                InstrumentFirmewareVersion = tokens[5];
+                InstrumentFirmwareVersion = tokens[5];
             }
             else
             {
