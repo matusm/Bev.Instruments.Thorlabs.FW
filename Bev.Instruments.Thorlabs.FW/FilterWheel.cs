@@ -36,9 +36,8 @@ namespace Bev.Instruments.Thorlabs.FW
 
         public void GoToPosition(int position)
         {
-            // if (IsInvalidPosition(position)) return; // TODO or just throw an exception?
+            if (IsInvalidPosition(position)) throw new ArgumentOutOfRangeException($"pos={position}");
             _ = Query($"pos={position}");
-            Thread.Sleep(typicalAccessTime);
         }
 
         public int GetPosition() => QueryNumber("pos?");
