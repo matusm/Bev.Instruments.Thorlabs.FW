@@ -8,7 +8,7 @@ namespace TestFW
         static void Main(string[] args)
         {
             //var fw = new FilterWheel(@"/dev/tty.usbserial-FTY594BQ");
-            var fw = new FilterWheel(@"COM1");
+            var fw = new MotorFilterWheel(@"COM1");
 
             Console.WriteLine("Port:      " + fw.DevicePort);
             Console.WriteLine("ID:        " + fw.InstrumentID);
@@ -19,7 +19,6 @@ namespace TestFW
             for (int i = 0; i < 4; i++)
             {
                 Move(1);
-                Move(7);
                 Move(3);
                 Move(4);
                 Move(5);

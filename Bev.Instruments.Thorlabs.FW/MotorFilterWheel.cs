@@ -4,7 +4,7 @@ using System.Threading;
 
 namespace Bev.Instruments.Thorlabs.FW
 {
-    public class FilterWheel : IFilterWheel
+    public class MotorFilterWheel : IFilterWheel
     {
         private readonly SerialPort serialPort;
         private const int transmitDelay = 100;
@@ -14,7 +14,7 @@ namespace Bev.Instruments.Thorlabs.FW
         // in slow mode the respective time is 6800 ms.
         private const int typicalAccessTime = 2900;
 
-        public FilterWheel(string port)
+        public MotorFilterWheel(string port)
         {
             serialPort = new SerialPort(port, 115200, Parity.None, 8, StopBits.One)
             {

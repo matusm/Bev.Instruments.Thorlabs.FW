@@ -42,7 +42,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="FilterWheel.cs" />
+    <Compile Include="MotorFilterWheel.cs" />
     <Compile Include="IFilterWheel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
