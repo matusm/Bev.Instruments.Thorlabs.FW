@@ -38,6 +38,7 @@ namespace Bev.Instruments.Thorlabs.FW
         public void GoToPosition(int position)
         {
             if (IsInvalidPosition(position)) throw new ArgumentOutOfRangeException($"pos={position}");
+            if (position == GetPosition()) return; // already there
             _ = Query($"pos={position}");
         }
 
