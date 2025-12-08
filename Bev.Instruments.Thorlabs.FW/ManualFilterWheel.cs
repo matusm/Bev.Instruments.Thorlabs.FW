@@ -19,7 +19,6 @@ namespace Bev.Instruments.Thorlabs.FW
         public void GoToPosition(int position)
         {
             if (IsInvalidPosition(position)) throw new ArgumentOutOfRangeException($"position={position}");
-            if (position == GetPosition()) return; // already there
             WriteMessageAndWait($"Please manually set the filter wheel '{Name}' to position {position} and press any key to continue...");
             _position = position;
         }
