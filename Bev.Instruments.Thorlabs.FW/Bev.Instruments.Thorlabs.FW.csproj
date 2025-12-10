@@ -45,6 +45,7 @@
     <Compile Include="ManualFilterWheel.cs" />
     <Compile Include="MotorFilterWheel.cs" />
     <Compile Include="IFilterWheel.cs" />
+    <Compile Include="NullFilterWheel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
