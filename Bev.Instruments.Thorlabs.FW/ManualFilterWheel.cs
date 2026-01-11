@@ -19,19 +19,21 @@ namespace Bev.Instruments.Thorlabs.FW
         public void GoToPosition(int position)
         {
             if (IsInvalidPosition(position)) throw new ArgumentOutOfRangeException($"position={position}");
-            WriteMessageAndWait($"Please manually set the filter wheel '{Name}' to position {position} and press any key to continue...");
+            if (position == _position) return;
+            WriteMessageAndWait($"Set the filter wheel '{Name}' to position {position} and press any key to continue ...");
             _position = position;
         }
 
-        public int GetPosition()
-        {
-            return _position;
-        }
+        public int GetPosition() => _position;
 
-        private int _position = 1;
+        private int _position = -1; // default starting position, unknown
 
         private void WriteMessageAndWait(string message)
         {
+            while (Console.KeyAvailable) // Check if any key is pressed
+            {
+                Console.ReadKey(true); // Read and ignore the key
+            }
             Console.WriteLine(message);
             Console.ReadKey(true); // true = do not display the key pressed
         }

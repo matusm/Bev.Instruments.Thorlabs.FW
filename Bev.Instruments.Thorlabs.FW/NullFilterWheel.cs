@@ -6,10 +6,7 @@
 
         public int FilterCount => 0;
 
-        public int GetPosition()
-        {
-            return 0;
-        }
+        public int GetPosition() => 0;
 
         public void GoToPosition(int position)
         {
